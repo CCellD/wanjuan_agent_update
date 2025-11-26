@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>应用配置</title>
+<style>
+  :root { --primary:#3b82f6; --bg:#f7f8fa; --card:#ffffff; --text:#111827; --muted:#6b7280; --border:#e5e7eb; }
+  html,body { height:100%; margin:0; }
+  body { background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--text); }
+  .container { max-width:1040px; margin:0 auto; padding:24px; }
+  .topnav { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .breadcrumb { font-size:20px; font-weight:700; color:var(--primary); }
+  .slash { color:#6b7280; margin:0 6px; }
+  .name { font-size:20px; font-weight:700; color:#1f2937; }
+  .icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; }
+  .grid { display:grid; grid-template-columns:520px 1fr; gap:24px; }
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; }
+  .panel-scroll { overflow-y:auto; max-height:calc(100vh - 140px); }
+  .section-title { font-size:14px; color:var(--muted); }
+  .field { display:flex; flex-direction:column; gap:10px; }
+  .input { width:100%; max-width:100%; box-sizing:border-box; min-height:110px; height:110px; border:1px solid var(--border); border-radius:12px; padding:12px; font-size:14px; resize:vertical; }
+  .list { display:flex; flex-direction:column; gap:8px; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .select { flex:1; height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; max-width:100%; box-sizing:border-box; }
+  .btn { appearance:none; border:none; padding:8px 16px; border-radius:10px; font-size:14px; font-weight:600; color:#fff; background:var(--primary); cursor:pointer; min-width:92px; }
+  .btn.added { background:#e5e7eb; color:#6b7280; cursor:default; }
+  #saveAllBtn { background:var(--primary); }
+  #publishBtn { background:#10b981; }
+  .preview { background:var(--card); border:1px solid var(--border); border-radius:14px; height:calc(100vh - 105px); display:flex; flex-direction:column; position:relative; }
+  .preview-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .preview-actions { display:flex; align-items:center; gap:8px; }
+  .chat { flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; overflow-y:auto; }
+  .chat-input { border-top:1px solid var(--border); padding:12px; }
+  .msg { display:flex; align-items:flex-start; gap:10px; }
+  .msg.ai { justify-content:flex-start; }
+  .msg.user { justify-content:flex-end; }
+  .msg .bubble { order:1; }
+  .msg .chat-avatar { order:2; }
+  .msg.ai .chat-avatar { order:1; }
+  .msg.ai .bubble { order:2; }
+  .bubble { max-width:70%; padding:10px 12px; border-radius:12px; font-size:14px; line-height:1.5; }
+  .msg.user .bubble { background:#eef2ff; border:1px solid var(--border); color:#111827; }
+  .msg.ai .bubble { background:#eef2ff; border:1px solid var(--border); color:#111827; }
+  .chat-avatar { width:28px; height:28px; border-radius:6px; background:#e0e7ff; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:700; flex-shrink:0; }
+  .chat-avatar.user { background:#e5e7eb; color:#111827; }
+  .chat.same .msg.user { justify-content:flex-start; }
+  .chat.same .msg.user .chat-avatar { order:1; }
+  .chat.same .msg.user .bubble { order:2; }
+  .chat.same .msg.user { justify-content:flex-start; }
+  .msg-ops { display:none; align-items:center; gap:6px; }
+  .msg:hover .msg-ops { display:flex; }
+  .msg .msg-ops { order:3; }
+  .msg.user .msg-ops { order:0; }
+  .chat.same .msg.user .msg-ops { order:3; }
+  .input-bar { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:8px 10px; }
+  .input-text { flex:1; min-height:36px; height:auto; border:none; outline:none; font-size:14px; resize:none; }
+  .actions { display:flex; align-items:center; gap:8px; }
+  .send-btn { width:32px; height:32px; border:none; border-radius:999px; background:var(--primary); color:#fff; cursor:pointer; }
+  .send-btn.disabled { background:#e5e7eb; color:#9ca3af; cursor:default; }
+  .attach-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:999px; background:#fff; cursor:pointer; }
+  .bubble img { max-width:240px; border-radius:8px; display:block; }
+  .rec-list { display:flex; flex-direction:column; gap:6px; }
+  .rec-item { display:block; cursor:pointer; color:#1f2937; text-align:left; background:none; border:none; padding:0; font-size:14px; }
+  .rec-item:hover { text-decoration:underline; }
+  .float-btn { position:absolute; right:10px; bottom:88px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:999px; background:#fff; box-shadow:0 8px 24px rgba(17,24,39,.15); }
+  .overlay { position:fixed; inset:0; background:rgba(17,24,39,.35); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; padding:20px; }
+  .dialog { width:720px; max-width:100%; background:#fff; border-radius:18px; border:1px solid var(--border); box-shadow:0 24px 80px rgba(17,24,39,.25); }
+  .dialog-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--border); font-weight:700; }
+  .dialog-body { padding:18px; display:flex; flex-direction:column; gap:16px; }
+  .dialog-footer { padding:14px 18px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid var(--border); }
+  .name-block { display:flex; flex-direction:column; gap:8px; }
+  .field-row { display:flex; align-items:center; gap:12px; }
+  .form-row { display:grid; grid-template-columns:120px 1fr 100px; align-items:center; gap:12px; }
+  .text { height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; width:100%; max-width:100%; box-sizing:border-box; }
+  .textarea2 { width:100%; max-width:100%; box-sizing:border-box; min-height:120px; border:1px solid var(--border); border-radius:12px; padding:12px; font-size:14px; resize:vertical; }
+  .app-icon2 { width:40px; height:40px; border-radius:8px; background:#e0e7ff; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:700; background-size:cover; background-position:center; cursor:pointer; }
+  .close-btn { appearance:none; border:none; background:#fff; border:1px solid var(--border); width:32px; height:32px; border-radius:8px; cursor:pointer; }
+  .error { color:#ef4444; font-size:12px; }
+  input[type=range] { -webkit-appearance:none; height:6px; background:linear-gradient(to right,var(--primary),var(--primary)) left/0% 100% no-repeat, #e5e7eb; border-radius:999px; outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; background:var(--primary); border-radius:50%; box-shadow:0 2px 6px rgba(59,130,246,.35); }
+  input[type=range]::-moz-range-thumb { width:16px; height:16px; background:var(--primary); border:none; border-radius:50%; }
+  .secondary-btn { appearance:none; border:1px solid var(--border); background:#fff; color:#1f2937; padding:8px 16px; border-radius:10px; min-width:92px; }
+  .gray-card { background:#f3f4f6; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .gray-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .gray-title { font-weight:600; color:#111827; }
+  .gray-desc { color:#6b7280; font-size:13px; }
+  .link-btn { appearance:none; border:none; background:#fff; color:#1f2937; padding:6px 10px; border-radius:8px; border:1px solid var(--border); }
+  .muted { color:#6b7280; font-size:12px; }
+  .right-actions { display:flex; align-items:center; gap:8px; }
+  .kb-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .kb-section { background:#f9fafb; border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:14px; }
+  .kb-title { font-weight:700; font-size:16px; color:#111827; }
+  .kb-label { font-weight:600; font-size:14px; color:#111827; }
+  .kb-field { display:flex; flex-direction:column; gap:8px; }
+  .kb-select { height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; width:100%; box-sizing:border-box; }
+  .kb-input { height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; width:100%; box-sizing:border-box; }
+  .kb-desc { color:#6b7280; font-size:13px; }
+  .switch { position:relative; width:44px; height:24px; border-radius:999px; background:#e5e7eb; cursor:pointer; }
+  .switch .dot { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s ease; }
+  .switch.on { background:var(--primary); }
+  .switch.on .dot { left:23px; }
+  .multi { position:relative; }
+  .multi-trigger { height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; display:flex; align-items:center; justify-content:space-between; background:#fff; cursor:pointer; }
+  .multi-menu { position:absolute; top:46px; left:0; right:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(17,24,39,.15); padding:8px; display:none; z-index:10; }
+  .multi-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; }
+  .multi-item:hover { background:#f3f4f6; }
+  .kb-item-list { display:flex; flex-direction:column; gap:8px; }
+  .kb-item-list, .tool-list { min-height:0; }
+  .kb-placeholder { color:var(--muted); font-size:13px; padding:8px 0; }
+  .kb-inline-desc { flex:1; margin:0 12px; border:1px solid var(--border); border-radius:10px; padding:6px 12px; color:var(--muted); font-size:13px; background:#fff; }
+  .kb-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
+  .kb-item.selected { background:#fff7f7; border-color:#fca5a5; }
+  .kb-item .left { display:flex; align-items:center; gap:10px; font-weight:600; color:#111827; }
+  .kb-item .ops { display:flex; align-items:center; gap:8px; }
+  .kb-detail { color:#6b7280; font-size:12px; margin-left:6px; }
+  .counter { color:#6b7280; font-size:12px; }
+  #toolModal .dialog { height:520px; display:flex; flex-direction:column; }
+  #toolModal .dialog-body { flex:1; overflow-y:auto; }
+  #toolModal .dialog-footer { flex-shrink:0; }
+  .file-list { display:flex; flex-direction:column; gap:10px; }
+  .file-item { display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+  .tabs { display:flex; align-items:center; gap:8px; }
+  .tabs-row { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:12px; }
+  .tabs-row .tool-search { width:260px; margin-bottom:0; }
+  .tab { appearance:none; border:1px solid transparent; background:#fff; color:#1f2937; padding:8px 12px; border-radius:10px; cursor:pointer; }
+  .tab.active { border-color:var(--border); background:#eef2ff; color:#1f2937; }
+  .tool-search { width:100%; height:40px; border:1px solid var(--border); border-radius:10px; padding:0 12px; font-size:14px; box-sizing:border-box; margin-bottom:12px; }
+  .tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tool-card { display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+  .tool-name { display:flex; align-items:center; gap:10px; color:#111827; font-weight:600; }
+  .tool-actions { display:flex; align-items:center; gap:8px; }
+  .tool-list { margin-top:10px; display:flex; flex-direction:column; gap:10px; }
+  .tool-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
+  .tool-row.selected { background:#fff7f7; border-color:#fca5a5; }
+  .tool-row .left { display:flex; align-items:center; gap:10px; font-weight:600; color:#111827; }
+  .tool-row .ops { display:flex; align-items:center; gap:8px; }
+  .icon-btn-sm { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; font-size:14px; }
+  .icon-delete { color:#ef4444; border-color:#fecaca; }
+  .switch-sm { position:relative; width:40px; height:22px; border-radius:999px; background:#e5e7eb; cursor:pointer; }
+  .switch-sm .dot { position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s ease; }
+  .switch-sm.on { background:var(--primary); }
+  .switch-sm.on .dot { left:21px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topnav">
+    <span class="breadcrumb">Agent</span>
+    <span class="slash">/</span>
+    <span id="navName" class="name">未命名</span>
+    <button id="editAppBtn" class="icon-btn" title="设置">✎</button>
+    <div class="right-actions" style="margin-left:auto">
+      <button id="cancelAllBtn" class="secondary-btn">返回</button>
+      <button id="saveAllBtn" class="btn">保存</button>
+      <button id="publishBtn" class="btn">发布</button>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="panel panel-scroll">
+      <div class="section-title">AI 配置</div>
+      <div class="row">
+        <span class="label">AI 模型</span>
+        <select class="select" id="modelSelect">
+          <option value="gpt-5-mini">gpt-5-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="qwen-2">qwen-2</option>
+          <option value="llama-3-8b">llama-3-8b</option>
+        </select>
+        <button id="modelSettingsBtn" class="icon-btn" title="模型设置">⚙</button>
+      </div>
+      <div class="section-title">提示词</div>
+      <div class="field">
+        <textarea class="input" placeholder="在此编写系统提示、对话风格等"></textarea>
+      </div>
+        <div class="gray-card">
+          <div class="gray-row">
+            <span class="gray-title">知识库</span>
+            <div class="right-actions">
+              <span id="kbSummary" class="muted">0/3 已选</span>
+              <button id="kbAddBtn" class="link-btn">+ 添加</button>
+              <button id="kbToggleBtn" class="icon-btn-sm" title="折叠">▾</button>
+            </div>
+          </div>
+          <div id="kbSelected" class="kb-item-list"></div>
+        </div>
+        <div class="gray-card">
+          <div class="gray-row">
+            <span class="gray-title">工具调用</span>
+            <div class="right-actions">
+              <span id="toolSummary" class="muted">0/0 启用</span>
+              <button id="toolAddBtn" class="link-btn">+ 添加</button>
+              <button id="toolToggleBtn" class="icon-btn-sm" title="折叠">▾</button>
+            </div>
+          </div>
+          <div id="toolList" class="tool-list"></div>
+        </div>
+        <div class="gray-card">
+          <div class="gray-row">
+            <span class="gray-title">文件上传</span>
+            <div class="right-actions">
+              <div id="uploadSwitch" class="switch"><div class="dot"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gray-card">
+          <div class="gray-row">
+            <span class="gray-title">交互体验</span>
+            <div class="right-actions">
+              <button id="uxAddBtn" class="link-btn">+ 添加</button>
+              <button id="uxToggleBtn" class="icon-btn-sm" title="折叠">▾</button>
+            </div>
+          </div>
+          <div id="uxList" class="tool-list"></div>
+        </div>
+    </div>
+  <div class="preview">
+    <div class="preview-header">
+      <div class="section-title" style="font-weight:700; color:#111827;">调试预览</div>
+      <div class="preview-actions">
+        <button id="toggleLayoutBtn" class="icon-btn-sm" title="布局">⇄</button>
+        <button id="clearChatBtn" class="icon-btn-sm" title="清空">🧹</button>
+      </div>
+    </div>
+    <div class="chat">
+    
+    </div>
+    <div class="chat-input">
+      <div class="input-bar">
+        <textarea class="input-text" placeholder="输入你感兴趣的问题进行测试"></textarea>
+        <div class="actions">
+          <button id="uploadDocBtn" class="attach-btn" title="上传文件" style="display:none">📎</button>
+          <input id="docInput" type="file" accept="application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,text/html,.csv" style="display:none">
+          <button id="uploadImgBtn" class="attach-btn" title="上传图片" style="display:none">🖼️</button>
+          <input id="imgInput" type="file" accept="image/*" style="display:none">
+          <button class="send-btn disabled" title="发送">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+<div id="kbModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>知识库</span>
+      <button id="closeKbModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="kb-grid">
+        <div class="kb-section">
+          <div class="kb-field">
+            <span class="kb-label">FAQ</span>
+            <div class="multi">
+              <div id="kbFaqBox" class="multi-trigger">请选择</div>
+              <div id="kbFaqMenu" class="multi-menu">
+                <label class="multi-item"><input type="checkbox" value="faq-1">FAQ 1</label>
+                <label class="multi-item"><input type="checkbox" value="faq-2">FAQ 2</label>
+              </div>
+            </div>
+          </div>
+          <div class="kb-field">
+            <span class="kb-label">RAG</span>
+            <div class="multi">
+              <div id="kbRagBox" class="multi-trigger">请选择</div>
+              <div id="kbRagMenu" class="multi-menu">
+                <label class="multi-item"><input type="checkbox" value="rag-1">RAG 1</label>
+                <label class="multi-item"><input type="checkbox" value="rag-2">RAG 2</label>
+              </div>
+            </div>
+          </div>
+          <div class="kb-field">
+            <span class="kb-label">图谱</span>
+            <div class="multi">
+              <div id="kbGraphBox" class="multi-trigger">请选择</div>
+              <div id="kbGraphMenu" class="multi-menu">
+                <label class="multi-item"><input type="checkbox" value="graph-1">图谱 1</label>
+                <label class="multi-item"><input type="checkbox" value="graph-2">图谱 2</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="kb-section">
+          <div class="kb-title">召回策略</div>
+          <div class="kb-field">
+            <div class="kb-label">FAQ直返</div>
+            <div id="kbFaqDirect" class="switch"><div class="dot"></div></div>
+            <div class="kb-desc">当问题与FAQ高匹配时直接返回预设答案</div>
+          </div>
+          <div class="kb-field">
+            <div class="kb-label">Rerank 模型</div>
+            <select id="kbRerankModel" class="kb-select">
+              <option value="">请选择Rerank模型</option>
+              <option value="rerank-a">Rerank A</option>
+              <option value="rerank-b">Rerank B</option>
+            </select>
+          </div>
+          <div class="kb-field">
+            <div class="kb-label">TOP K</div>
+            <input id="kbTopK" class="kb-input" type="number" min="1" max="50" value="5">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="kbError" class="error"></div>
+    <div class="dialog-footer">
+      <button id="cancelKbModal" class="secondary-btn">取消</button>
+      <button id="confirmKbModal" class="btn">确认</button>
+    </div>
+  </div>
+</div>
+<div id="toolModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>工具调用</span>
+      <button id="closeToolModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="tabs-row">
+        <div class="tabs">
+          <button class="tab active" data-tab="system">系统工具</button>
+          <button class="tab" data-tab="mine">我的工具</button>
+          <button class="tab" data-tab="api">API</button>
+          <button class="tab" data-tab="mcp">MCP</button>
+          <button class="tab" data-tab="workflow">工作流</button>
+        </div>
+        <input id="toolSearch" class="tool-search" placeholder="搜索工具">
+      </div>
+      <div id="toolGrid" class="tool-grid">
+        <div class="tool-card" data-name="融合信息搜索" data-tab="system">
+          <div class="tool-name">融合信息搜索</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+        <div class="tool-card" data-name="数据库操作" data-tab="system">
+          <div class="tool-name">数据库操作</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+        <div class="tool-card" data-name="我的Webhook" data-tab="mine">
+          <div class="tool-name">我的Webhook</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+        <div class="tool-card" data-name="REST API" data-tab="api">
+          <div class="tool-name">REST API</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+        <div class="tool-card" data-name="MCP Server" data-tab="mcp">
+          <div class="tool-name">MCP Server</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+        <div class="tool-card" data-name="审批工作流" data-tab="workflow">
+          <div class="tool-name">审批工作流</div>
+          <div class="tool-actions">
+            <button class="btn add-btn">添加</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button id="cancelToolModal" class="secondary-btn">取消</button>
+      <button id="confirmToolModal" class="btn">确认</button>
+    </div>
+  </div>
+</div>
+<div id="imageToolModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>图片回答</span>
+      <button id="closeImageToolModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-row">
+        <span class="label">调用模型</span>
+        <select id="imgModel" class="text">
+          <option value="vision-gpt">vision-gpt</option>
+          <option value="qwen-vision">qwen-vision</option>
+          <option value="llava">llava</option>
+        </select>
+        <span></span>
+      </div>
+      <div class="form-row">
+        <span class="label">用户自定义Prompt</span>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label style="display:flex; align-items:center; gap:8px;"><input id="imgPromptEnable" type="checkbox">启用</label>
+          <textarea id="imgPrompt" class="textarea2" placeholder="请输入Prompt" disabled>你是一个图像分析助手。请仔细观察用户上传的图片，并仅基于图片可见内容回答问题：{{ user_question }}。
+**要求：**
+1. 简要描述图中与问题相关的物体、人物、场景、文字等核心元素。
+2. 基于描述，直接、准确地回答问题。
+3. 答案必须来自图片。</textarea>
+          <div id="imgVars" class="chip-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button id="cancelImageToolModal" class="secondary-btn">取消</button>
+      <button id="confirmImageToolModal" class="btn">保存</button>
+    </div>
+  </div>
+</div>
+</div>
+<div id="infoModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>详情</span>
+      <button id="closeInfoModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div id="infoText">具体数据</div>
+    </div>
+    <div class="dialog-footer">
+      <button id="confirmInfoModal" class="btn">确定</button>
+    </div>
+  </div>
+</div>
+<div id="uploadModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>文件上传</span>
+      <button id="closeUploadModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-row">
+        <span class="label">最大文件数量</span>
+        <input id="uploadMax" type="range" min="1" max="20" value="10">
+        <input id="uploadMaxNum" type="number" min="1" max="20" value="10" class="text">
+      </div>
+      <div class="section-title">支持上传的类型</div>
+      <div class="file-list">
+        <label class="file-item"><div>文档 <span class="muted">pdf/docx/pptx/xlsx/txt/md/html/csv</span></div><input id="uploadTypeDoc" type="checkbox"></label>
+        <label class="file-item"><div>图片 <span class="muted">jpg/jpeg/png/gif/bmp/webp/svg</span></div><input id="uploadTypeImg" type="checkbox"></label>
+        
+        
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button id="cancelUploadModal" class="secondary-btn">取消</button>
+      <button id="confirmUploadModal" class="btn">确认</button>
+    </div>
+  </div>
+</div>
+<div id="uxModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>交互体验</span>
+      <button id="closeUxModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-row">
+        <span class="label">欢迎语</span>
+        <input id="uxWelcome" class="text" placeholder="请输入欢迎语">
+        <span></span>
+      </div>
+      <div class="form-row">
+        <span class="label">过程可见性</span>
+        <div id="uxVisible" class="switch"><div class="dot"></div></div>
+        <span></span>
+      </div>
+      <div class="form-row">
+        <span class="label">推荐问题</span>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="field-row">
+            <input id="uxRec1" class="text" placeholder="请输入推荐问题1" maxlength="20">
+            <span id="uxRec1Count" class="counter">0/20</span>
+          </div>
+          <div class="field-row">
+            <input id="uxRec2" class="text" placeholder="请输入推荐问题2" maxlength="20">
+            <span id="uxRec2Count" class="counter">0/20</span>
+          </div>
+          <div class="field-row">
+            <input id="uxRec3" class="text" placeholder="请输入推荐问题3" maxlength="20">
+            <span id="uxRec3Count" class="counter">0/20</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="label">下一步推荐问题</span>
+        <div id="uxNextStep" class="switch"><div class="dot"></div></div>
+        <span></span>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button id="cancelUxModal" class="secondary-btn">取消</button>
+      <button id="confirmUxModal" class="btn">保存</button>
+    </div>
+  </div>
+</div>
+</div>
+<div id="appModal" class="overlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <span>应用设置</span>
+      <button id="closeAppModal" class="close-btn">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="name-block">
+        <span class="label">名称</span>
+        <div class="field-row">
+          <div id="editIconPreview" class="app-icon2">▧</div>
+          <input id="editIconFile" type="file" accept="image/*" style="display:none">
+          <input id="editAppName" class="text" placeholder="请输入名称">
+        </div>
+        <div id="editNameError" class="error"></div>
+      </div>
+      <span class="label">描述（可选）</span>
+      <textarea id="editDesc" class="textarea2" placeholder="请输入应用的用途、能力或期望行为"></textarea>
+    </div>
+    <div class="dialog-footer">
+      <button id="cancelAppModal" class="secondary-btn">取消</button>
+      <button id="confirmAppModal" class="btn">确认</button>
+    </div>
+  </div>
+</div>
+
+  <div id="aiModal" class="overlay">
+    <div class="dialog">
+      <div class="dialog-header">
+        <span>AI 配置</span>
+        <button id="closeAiModal" class="close-btn">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-row">
+          <span class="label">AI 模型</span>
+          <select id="aiModelSelect" class="text">
+            <option value="gpt-5-mini">gpt-5-mini</option>
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="qwen-2">qwen-2</option>
+            <option value="llama-3-8b">llama-3-8b</option>
+          </select>
+          <span></span>
+        </div>
+        <div class="form-row">
+          <span class="label">回复上限</span>
+          <input id="replyLimit" type="range" min="0" max="4096" value="512">
+          <input id="replyLimitNum" type="number" min="0" max="4096" value="512" class="text">
+        </div>
+        <div class="form-row">
+          <span class="label">Top P</span>
+          <input id="topP" type="range" min="0" max="1" step="0.01" value="0.9">
+          <input id="topPNum" type="number" min="0" max="1" step="0.01" value="0.9" class="text">
+        </div>
+        <div class="form-row">
+          <span class="label">温度</span>
+          <input id="temperature" type="range" min="0" max="2" step="0.1" value="1.0">
+          <input id="temperatureNum" type="number" min="0" max="2" step="0.1" value="1.0" class="text">
+        </div>
+      </div>
+      <div class="dialog-footer">
+      <button id="cancelAiModal" class="secondary-btn">取消</button>
+      <button id="confirmAiModal" class="btn">确认</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  try {
+    var name = localStorage.getItem('app_name');
+    if(name){ document.getElementById('navName').textContent = name; }
+  } catch(e) {}
+
+  var editAppBtn = document.getElementById('editAppBtn');
+  var appModal = document.getElementById('appModal');
+  var closeAppModal = document.getElementById('closeAppModal');
+  var cancelAppModal = document.getElementById('cancelAppModal');
+  var confirmAppModal = document.getElementById('confirmAppModal');
+  var editIconPreview = document.getElementById('editIconPreview');
+  var editIconFile = document.getElementById('editIconFile');
+  var editAppName = document.getElementById('editAppName');
+  var editNameError = document.getElementById('editNameError');
+  var editDesc = document.getElementById('editDesc');
+
+  function openAppModal(){
+    try {
+      var n = localStorage.getItem('app_name') || '';
+      var d = localStorage.getItem('app_desc') || '';
+      editAppName.value = n;
+      editDesc.value = d;
+    } catch(e) {}
+    appModal.style.display = 'flex';
+  }
+
+  function closeApp(){ appModal.style.display = 'none'; }
+
+  editAppBtn.addEventListener('click', openAppModal);
+  closeAppModal.addEventListener('click', closeApp);
+  cancelAppModal.addEventListener('click', closeApp);
+
+  editIconPreview.addEventListener('click', function(){ editIconFile.click(); });
+  editIconFile.addEventListener('change', function(){
+    var file = this.files && this.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      editIconPreview.style.backgroundImage = 'url(' + e.target.result + ')';
+      editIconPreview.textContent = '';
+      try { localStorage.setItem('app_icon', e.target.result); } catch(err) {}
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function validateName(v){
+    var trimmed = (v||'').trim();
+    if(trimmed.length === 0) return '名称为必填项，且不可仅为空格';
+    if(/\s/.test(v)) return '名称不可包含空格';
+    return '';
+  }
+
+  confirmAppModal.addEventListener('click', function(){
+    var msg = validateName(editAppName.value);
+    if(msg){ editNameError.textContent = msg; editAppName.focus(); return; }
+    editNameError.textContent = '';
+    try { localStorage.setItem('app_name', editAppName.value.trim()); localStorage.setItem('app_desc', editDesc.value || ''); } catch(e) {}
+    document.getElementById('navName').textContent = editAppName.value.trim();
+    markDirty();
+    closeApp();
+  });
+
+  var modelSettingsBtn = document.getElementById('modelSettingsBtn');
+  var aiModal = document.getElementById('aiModal');
+  var closeAiModal = document.getElementById('closeAiModal');
+  var cancelAiModal = document.getElementById('cancelAiModal');
+  var confirmAiModal = document.getElementById('confirmAiModal');
+  var aiModelSelect = document.getElementById('aiModelSelect');
+  var replyLimit = document.getElementById('replyLimit');
+  var replyLimitNum = document.getElementById('replyLimitNum');
+  var topP = document.getElementById('topP');
+  var topPNum = document.getElementById('topPNum');
+  var temperature = document.getElementById('temperature');
+  var temperatureNum = document.getElementById('temperatureNum');
+  var modelSelect = document.getElementById('modelSelect');
+  var kbAddBtn = document.getElementById('kbAddBtn');
+  var kbModal = document.getElementById('kbModal');
+  var closeKbModal = document.getElementById('closeKbModal');
+  var cancelKbModal = document.getElementById('cancelKbModal');
+  var confirmKbModal = document.getElementById('confirmKbModal');
+  var kbFaqBox = document.getElementById('kbFaqBox');
+  var kbRagBox = document.getElementById('kbRagBox');
+  var kbGraphBox = document.getElementById('kbGraphBox');
+  var kbFaqMenu = document.getElementById('kbFaqMenu');
+  var kbRagMenu = document.getElementById('kbRagMenu');
+  var kbGraphMenu = document.getElementById('kbGraphMenu');
+  var kbFaqDirect = document.getElementById('kbFaqDirect');
+  var kbRerankModel = document.getElementById('kbRerankModel');
+  var kbTopK = document.getElementById('kbTopK');
+  var kbSelected = document.getElementById('kbSelected');
+  var kbError = document.getElementById('kbError');
+  var kbToggleBtn = document.getElementById('kbToggleBtn');
+  var kbSummary = document.getElementById('kbSummary');
+  var toolAddBtn = document.getElementById('toolAddBtn');
+  var toolModal = document.getElementById('toolModal');
+  var closeToolModal = document.getElementById('closeToolModal');
+  var cancelToolModal = document.getElementById('cancelToolModal');
+  var confirmToolModal = document.getElementById('confirmToolModal');
+  var toolSearch = document.getElementById('toolSearch');
+  var toolGrid = document.getElementById('toolGrid');
+  var toolTabs = Array.from(document.querySelectorAll('#toolModal .tab'));
+  var toolList = document.getElementById('toolList');
+  var toolSummary = document.getElementById('toolSummary');
+  var toolToggleBtn = document.getElementById('toolToggleBtn');
+  var infoModal = document.getElementById('infoModal');
+  var closeInfoModal = document.getElementById('closeInfoModal');
+  var confirmInfoModal = document.getElementById('confirmInfoModal');
+  var infoText = document.getElementById('infoText');
+  var kbCollapsed = false;
+  var toolCollapsed = false;
+  var uxAddBtn = document.getElementById('uxAddBtn');
+  var uxList = document.getElementById('uxList');
+  var uxModal = document.getElementById('uxModal');
+  var closeUxModal = document.getElementById('closeUxModal');
+  var cancelUxModal = document.getElementById('cancelUxModal');
+  var confirmUxModal = document.getElementById('confirmUxModal');
+  var uxWelcome = document.getElementById('uxWelcome');
+  var uxVisible = document.getElementById('uxVisible');
+  var uxRec1 = document.getElementById('uxRec1');
+  var uxRec2 = document.getElementById('uxRec2');
+  var uxRec3 = document.getElementById('uxRec3');
+  var uxRec1Count = document.getElementById('uxRec1Count');
+  var uxRec2Count = document.getElementById('uxRec2Count');
+  var uxRec3Count = document.getElementById('uxRec3Count');
+  var uxNextStep = document.getElementById('uxNextStep');
+  var uxToggleBtn = document.getElementById('uxToggleBtn');
+  var uxCollapsed = false;
+  var cancelAllBtn = document.getElementById('cancelAllBtn');
+  var saveAllBtn = document.getElementById('saveAllBtn');
+  var publishBtn = document.getElementById('publishBtn');
+  var isDirty = false;
+  function markDirty(){ isDirty = true; }
+  var imageToolModal = document.getElementById('imageToolModal');
+  var closeImageToolModal = document.getElementById('closeImageToolModal');
+  var cancelImageToolModal = document.getElementById('cancelImageToolModal');
+  var confirmImageToolModal = document.getElementById('confirmImageToolModal');
+  var imgModel = document.getElementById('imgModel');
+  var imgPromptEnable = document.getElementById('imgPromptEnable');
+  var imgPrompt = document.getElementById('imgPrompt');
+  var imgVars = document.getElementById('imgVars');
+
+  function openAi(){ aiModelSelect.value = modelSelect.value; aiModal.style.display = 'flex'; }
+  modelSelect.addEventListener('change', markDirty);
+  function closeAi(){ aiModal.style.display = 'none'; }
+
+  function openKb(){
+    try {
+      function parseList(keyStr, legacyKey){
+        var raw = localStorage.getItem(keyStr);
+        if(raw){ try { return JSON.parse(raw)||[]; } catch(e) { return []; } }
+        var legacy = localStorage.getItem(legacyKey)||''; return legacy ? [legacy] : [];
+      }
+      var fList = parseList('kb_faq_list','kb_faq');
+      var rList = parseList('kb_rag_list','kb_rag');
+      var gList = parseList('kb_graph_list','kb_graph');
+      function setMenuValues(menu, arr){ Array.from(menu.querySelectorAll('input[type=checkbox]')).forEach(function(c){ c.checked = arr.indexOf(c.value) >= 0; }); }
+      setMenuValues(kbFaqMenu, fList);
+      setMenuValues(kbRagMenu, rList);
+      setMenuValues(kbGraphMenu, gList);
+      function updateBoxText(box, arr){ box.textContent = arr.length ? ('已选 ' + arr.length + ' 项') : '请选择'; }
+      updateBoxText(kbFaqBox, fList);
+      updateBoxText(kbRagBox, rList);
+      updateBoxText(kbGraphBox, gList);
+      kbRerankModel.value = localStorage.getItem('kb_rerank_model') || '';
+      kbTopK.value = localStorage.getItem('kb_top_k') || '5';
+      var direct = localStorage.getItem('kb_faq_direct') === 'true';
+      if(direct) kbFaqDirect.classList.add('on'); else kbFaqDirect.classList.remove('on');
+    } catch(e) {}
+    kbModal.style.display = 'flex';
+  }
+  function closeKb(){ kbModal.style.display = 'none'; }
+
+  function hydrateToolModal(){
+    var arr = getTools();
+    Array.from(toolGrid.querySelectorAll('.tool-card')).forEach(function(card){
+      var name = card.getAttribute('data-name')||'';
+      var id = name.toLowerCase().replace(/\s+/g,'-');
+      var btn = card.querySelector('.add-btn');
+      var added = arr.some(function(t){ return t.id === id; });
+      btn.textContent = added ? '已添加' : '添加';
+      if(added) btn.classList.add('added'); else btn.classList.remove('added');
+    });
+  }
+  function openTool(){ hydrateToolModal(); toolModal.style.display = 'flex'; }
+  function closeTool(){ toolModal.style.display = 'none'; }
+  function openInfo(text){ infoText.textContent = text || '具体数据'; infoModal.style.display = 'flex'; }
+  function closeInfo(){ infoModal.style.display = 'none'; }
+  function openImageTool(existing){
+    var cfg = existing || getToolConfig('image-answer');
+    imgModel.value = (cfg && cfg.model) || 'vision-gpt';
+    var enabled = !!(cfg && cfg.promptEnabled);
+    imgPromptEnable.checked = enabled;
+    imgPrompt.disabled = !enabled;
+    imgPrompt.value = (cfg && cfg.prompt) || imgPrompt.value;
+    updateImgVars();
+    imageToolModal.style.display = 'flex';
+  }
+  function closeImageTool(){ imageToolModal.style.display = 'none'; }
+  function openUx(){
+    var d = getUx();
+    uxWelcome.value = d.welcome || '';
+    if(d.visible) uxVisible.classList.add('on'); else uxVisible.classList.remove('on');
+    uxRec1.value = d.rec1 || '';
+    uxRec2.value = d.rec2 || '';
+    uxRec3.value = d.rec3 || '';
+    uxRec1Count.textContent = (uxRec1.value.length||0) + '/20';
+    uxRec2Count.textContent = (uxRec2.value.length||0) + '/20';
+    uxRec3Count.textContent = (uxRec3.value.length||0) + '/20';
+    if(d.nextStep) uxNextStep.classList.add('on'); else uxNextStep.classList.remove('on');
+    uxModal.style.display = 'flex';
+  }
+  function closeUx(){ uxModal.style.display = 'none'; }
+
+  modelSettingsBtn.addEventListener('click', openAi);
+  kbAddBtn.addEventListener('click', openKb);
+  closeKbModal.addEventListener('click', closeKb);
+  cancelKbModal.addEventListener('click', closeKb);
+  kbModal.addEventListener('click', function(e){ if(e.target === kbModal) closeKb(); });
+  kbFaqDirect.addEventListener('click', function(){ kbFaqDirect.classList.toggle('on'); });
+  kbToggleBtn.addEventListener('click', function(){ kbCollapsed = !kbCollapsed; updateKbCollapsed(); });
+  toolToggleBtn.addEventListener('click', function(){ toolCollapsed = !toolCollapsed; updateToolCollapsed(); });
+  infoModal.addEventListener('click', function(e){ if(e.target === infoModal) closeInfo(); });
+  closeInfoModal.addEventListener('click', closeInfo);
+  confirmInfoModal.addEventListener('click', closeInfo);
+
+  function updateKbCollapsed(){
+    kbSelected.style.display = (kbCollapsed || kbSelected.children.length === 0) ? 'none' : 'block';
+    kbToggleBtn.textContent = kbCollapsed ? '▸' : '▾';
+  }
+  function updateToolCollapsed(){
+    toolList.style.display = (toolCollapsed || toolList.children.length === 0) ? 'none' : 'block';
+    toolToggleBtn.textContent = toolCollapsed ? '▸' : '▾';
+  }
+  updateKbCollapsed();
+  updateToolCollapsed();
+  toolAddBtn.addEventListener('click', openTool);
+  var uploadSwitch = document.getElementById('uploadSwitch');
+  var uploadModal = document.getElementById('uploadModal');
+  var closeUploadModal = document.getElementById('closeUploadModal');
+  var cancelUploadModal = document.getElementById('cancelUploadModal');
+  var confirmUploadModal = document.getElementById('confirmUploadModal');
+  var uploadMax = document.getElementById('uploadMax');
+  var uploadMaxNum = document.getElementById('uploadMaxNum');
+  var uploadTypeDoc = document.getElementById('uploadTypeDoc');
+  var uploadTypeImg = document.getElementById('uploadTypeImg');
+  
+  function openUpload(){ hydrateUpload(); uploadModal.style.display = 'flex'; }
+  function closeUpload(){ uploadModal.style.display = 'none'; }
+  uploadSwitch.addEventListener('click', function(){
+    var d = getUpload();
+    if(uploadSwitch.classList.contains('on')){
+      uploadSwitch.classList.remove('on');
+      d.enabled = false;
+      setUpload(d);
+      markDirty();
+      renderUploadButtons();
+    } else {
+      openUpload();
+    }
+  });
+  uploadModal.addEventListener('click', function(e){ if(e.target === uploadModal) closeUpload(); });
+  closeUploadModal.addEventListener('click', closeUpload);
+  cancelUploadModal.addEventListener('click', closeUpload);
+  closeImageToolModal.addEventListener('click', closeImageTool);
+  cancelImageToolModal.addEventListener('click', closeImageTool);
+  imageToolModal.addEventListener('click', function(e){ if(e.target === imageToolModal) closeImageTool(); });
+  imgPromptEnable.addEventListener('change', function(){ imgPrompt.disabled = !imgPromptEnable.checked; });
+  imgPrompt.addEventListener('input', updateImgVars);
+  uxAddBtn.addEventListener('click', openUx);
+  closeToolModal.addEventListener('click', closeTool);
+  cancelToolModal.addEventListener('click', closeTool);
+  toolModal.addEventListener('click', function(e){ if(e.target === toolModal) closeTool(); });
+  uxModal.addEventListener('click', function(e){ if(e.target === uxModal) closeUx(); });
+  closeUxModal.addEventListener('click', closeUx);
+  cancelUxModal.addEventListener('click', closeUx);
+  uxVisible.addEventListener('click', function(){ uxVisible.classList.toggle('on'); });
+  uxNextStep.addEventListener('click', function(){ uxNextStep.classList.toggle('on'); });
+  uxToggleBtn.addEventListener('click', function(){ uxCollapsed = !uxCollapsed; updateUxCollapsed(); });
+  function updateUxCollapsed(){
+    uxList.style.display = (uxCollapsed || uxList.children.length === 0) ? 'none' : 'block';
+    uxToggleBtn.textContent = uxCollapsed ? '▸' : '▾';
+  }
+  updateUxCollapsed();
+  function setUpload(data){ try { localStorage.setItem('upload_config', JSON.stringify(data)); } catch(e) {} }
+  function getUpload(){ try { return JSON.parse(localStorage.getItem('upload_config')||'{}'); } catch(e) { return {}; } }
+  function hydrateUpload(){
+    var d = getUpload();
+    if(d.enabled) uploadSwitch.classList.add('on'); else uploadSwitch.classList.remove('on');
+    uploadMax.value = String(d.max||10); uploadMaxNum.value = String(d.max||10); updateFill(uploadMax);
+    uploadTypeDoc.checked = !!(d.types && d.types.doc);
+    uploadTypeImg.checked = !!(d.types && d.types.img);
+    
+  }
+  uploadMax.addEventListener('input', function(){ uploadMaxNum.value = uploadMax.value; updateFill(uploadMax); });
+  uploadMaxNum.addEventListener('input', function(){ var v = Math.max(1, Math.min(20, parseInt(uploadMaxNum.value||'10'))); uploadMaxNum.value = String(v); uploadMax.value = String(v); updateFill(uploadMax); });
+  confirmUploadModal.addEventListener('click', function(){
+    var d = getUpload();
+    d.enabled = true; uploadSwitch.classList.add('on');
+    d.max = parseInt(uploadMax.value||'10');
+    d.types = { doc: uploadTypeDoc.checked, img: uploadTypeImg.checked };
+    setUpload(d);
+    closeUpload();
+    renderUploadButtons();
+    markDirty();
+  });
+  var inputText = document.querySelector('.input-text');
+  var promptTextarea = document.querySelector('.panel .input');
+  var sendBtn = document.querySelector('.send-btn');
+  var chatArea = document.querySelector('.chat');
+  var clearChatBtn = document.getElementById('clearChatBtn');
+  var toggleLayoutBtn = document.getElementById('toggleLayoutBtn');
+  var uploadDocBtn = document.getElementById('uploadDocBtn');
+  var uploadImgBtn = document.getElementById('uploadImgBtn');
+  var docInput = document.getElementById('docInput');
+  var imgInput = document.getElementById('imgInput');
+  function updateSend(){ if(inputText.value.trim()) sendBtn.classList.remove('disabled'); else sendBtn.classList.add('disabled'); }
+  function autoResize(){ inputText.style.height='auto'; var s=inputText.scrollHeight; inputText.style.height=Math.max(36,s)+'px'; }
+  function scrollChat(){ chatArea.scrollTop = chatArea.scrollHeight; }
+  inputText.addEventListener('input', function(){ updateSend(); autoResize(); });
+  if(promptTextarea){ promptTextarea.addEventListener('input', markDirty); }
+  function createOps(){ var ops = document.createElement('div'); ops.className = 'msg-ops'; var copy = document.createElement('button'); copy.className = 'icon-btn-sm copy-btn'; copy.title = '复制'; copy.textContent = '⎘'; var regen = document.createElement('button'); regen.className = 'icon-btn-sm regen-btn'; regen.title = '重新生成'; regen.textContent = '↻'; var del = document.createElement('button'); del.className = 'icon-btn-sm icon-delete delete-btn'; del.title = '删除'; del.textContent = '🗑'; ops.appendChild(copy); ops.appendChild(regen); ops.appendChild(del); return ops; }
+  function addUserMessage(text){ var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
+  function addAiMessage(text){ var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
+  function addAiRecommend(arr){ var list = (arr||[]).filter(function(x){ return x && x.trim(); }); if(!list.length) return; var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var ops = createOps(); var title = document.createElement('div'); title.className = 'muted'; title.textContent = '猜你想问：'; var box = document.createElement('div'); box.className = 'rec-list'; list.forEach(function(q){ var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rec-item'; btn.textContent = q.trim(); btn.addEventListener('click', function(){ addUserMessage(q.trim()); addAiMessage('这是模拟回复：' + q.trim()); }); box.appendChild(btn); }); bubble.appendChild(title); bubble.appendChild(box); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
+  function send(){ if(isDirty){ openInfo('请先保存再调试'); return; } if(sendBtn.classList.contains('disabled')) return; var t = inputText.value.trim(); if(!t) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage(t); addAiMessage('这是模拟回复：' + t); inputText.value=''; updateSend(); autoResize(); scrollChat(); }
+  sendBtn.addEventListener('click', send);
+  toggleLayoutBtn.addEventListener('click', function(){ chatArea.classList.toggle('same'); });
+  document.addEventListener('keydown', function(e){ if(e.key!=='Enter') return; if(e.ctrlKey||e.altKey||e.shiftKey||e.metaKey){ e.preventDefault(); if(document.activeElement!==inputText) inputText.focus(); var start=inputText.selectionStart||inputText.value.length; var end=inputText.selectionEnd||start; var v=inputText.value; inputText.value=v.slice(0,start)+'\n'+v.slice(end); inputText.selectionStart=inputText.selectionEnd=start+1; updateSend(); autoResize(); } else { e.preventDefault(); send(); } });
+  clearChatBtn.addEventListener('click', function(){ chatArea.innerHTML=''; var p = document.createElement('div'); p.textContent = '在此输入问题以测试对话效果'; chatArea.appendChild(p); inputText.value=''; updateSend(); });
+  function renderUploadButtons(){ var u = getUpload(); var enabled = !!u.enabled; var doc = enabled && !!(u.types && u.types.doc); var img = enabled && !!(u.types && u.types.img); uploadDocBtn.style.display = doc ? 'flex' : 'none'; uploadImgBtn.style.display = img ? 'flex' : 'none'; }
+  uploadDocBtn.addEventListener('click', function(){ docInput.click(); });
+  uploadImgBtn.addEventListener('click', function(){ imgInput.click(); });
+  docInput.addEventListener('change', function(){ var f = docInput.files && docInput.files[0]; if(!f) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage('已选择文件: ' + f.name); docInput.value=''; updateSend(); scrollChat(); });
+  imgInput.addEventListener('change', function(){ var f = imgInput.files && imgInput.files[0]; if(!f) return; var url = URL.createObjectURL(f); if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var img = document.createElement('img'); img.src = url; bubble.appendChild(img); var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); imgInput.value=''; updateSend(); scrollChat(); })
+  chatArea.addEventListener('click', function(e){
+    var copy = e.target && e.target.closest('.copy-btn');
+    var regen = e.target && e.target.closest('.regen-btn');
+    var del = e.target && e.target.closest('.delete-btn');
+    if(!copy && !regen && !del) return;
+    var row = e.target.closest('.msg');
+    if(!row) return;
+    var bubble = row.querySelector('.bubble');
+    if(copy){ var text = bubble ? bubble.textContent || '' : ''; try { navigator.clipboard.writeText(text); } catch(err) {} return; }
+    if(del){ var prev = row.previousElementSibling; var next = row.nextElementSibling; if(row.classList.contains('user') && next && next.classList.contains('msg') && next.classList.contains('ai')){ next.remove(); row.remove(); return; } if(row.classList.contains('ai') && prev && prev.classList.contains('msg') && prev.classList.contains('user')){ prev.remove(); row.remove(); return; } row.remove(); return; }
+    if(regen){ var userRow = row.classList.contains('user') ? row : (row.previousElementSibling && row.previousElementSibling.classList.contains('msg') && row.previousElementSibling.classList.contains('user') ? row.previousElementSibling : null); var aiRow = row.classList.contains('ai') ? row : (row.nextElementSibling && row.nextElementSibling.classList.contains('msg') && row.nextElementSibling.classList.contains('ai') ? row.nextElementSibling : null); var uText = userRow ? (userRow.querySelector('.bubble').textContent || '') : ''; if(aiRow){ aiRow.querySelector('.bubble').textContent = '这是重新生成的回复：' + uText; } else { var newAi = document.createElement('div'); newAi.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var nb = document.createElement('div'); nb.className = 'bubble'; nb.textContent = '这是重新生成的回复：' + uText; var ops2 = createOps(); newAi.appendChild(avatar); newAi.appendChild(nb); newAi.appendChild(ops2); if(row.classList.contains('user')) row.after(newAi); else row.after(newAi); } scrollChat(); return; }
+  });
+  renderUploadButtons();
+  cancelAllBtn.addEventListener('click', function(){ window.location.href = 'index.html'; });
+  saveAllBtn.addEventListener('click', function(){ isDirty = false; openInfo('保存成功'); try { var ux = getUx(); var welcome = (ux.welcome||'').trim(); if(welcome){ if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addAiMessage(welcome); } var recs = [ux.rec1||'', ux.rec2||'', ux.rec3||'']; addAiRecommend(recs); } catch(e) {} });
+  publishBtn.addEventListener('click', function(){ if(isDirty){ openInfo('请先保存后再发布'); return; } openInfo('发布成功'); });
+  toolTabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      toolTabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var current = tab.getAttribute('data-tab');
+      Array.from(toolGrid.children).forEach(function(card){
+        card.style.display = (card.getAttribute('data-tab') === current) ? 'flex' : 'none';
+      });
+    });
+  });
+  toolSearch.addEventListener('input', function(){
+    var q = toolSearch.value.toLowerCase();
+    Array.from(toolGrid.children).forEach(function(card){
+      var name = (card.getAttribute('data-name')||'').toLowerCase();
+      card.style.opacity = name.indexOf(q) >= 0 ? '1' : '.3';
+    });
+  });
+  function getTools(){
+    try { return JSON.parse(localStorage.getItem('tools')||'[]'); } catch(e) { return []; }
+  }
+  function setTools(arr){
+    try { localStorage.setItem('tools', JSON.stringify(arr)); } catch(e) {}
+  }
+  function renderTools(){
+    var arr = getTools();
+    toolList.innerHTML = '';
+    var enabled = arr.filter(function(t){ return !!t.enabled; }).length;
+    toolSummary.textContent = enabled + '/' + arr.length + ' 启用';
+    arr.forEach(function(t, idx){
+      var row = document.createElement('div');
+      row.className = 'tool-row';
+      row.setAttribute('data-index', String(idx));
+      row.setAttribute('data-id', String(t.id||''));
+      row.innerHTML = '<div class="left">' + (t.icon||'🔧') + ' ' + (t.name||'未命名') + '</div>' +
+        '<div class="ops">'
+        + '<button class="icon-btn-sm info-btn" title="信息">ℹ</button>'
+        + '<button class="icon-btn-sm icon-delete delete-btn" title="删除">🗑</button>'
+        + '<div class="switch-sm' + (t.enabled ? ' on' : '') + '"><div class="dot"></div></div>'
+        + '</div>';
+      toolList.appendChild(row);
+    });
+    updateToolCollapsed();
+  }
+  renderTools();
+
+  toolGrid.addEventListener('click', function(e){
+    var btn = e.target && e.target.closest('.add-btn');
+    if(!btn) return;
+    var card = btn.closest('.tool-card');
+    var name = card.getAttribute('data-name');
+    var id = name.toLowerCase().replace(/\s+/g,'-');
+    var arr = getTools();
+    if(arr.some(function(t){ return t.id === id; })) { return; }
+    arr.push({ id:id, name:name, enabled:true });
+    setTools(arr);
+    renderTools();
+    toolCollapsed = false; updateToolCollapsed();
+    btn.textContent = '已添加';
+    btn.classList.add('added');
+    markDirty();
+  });
+
+  toolList.addEventListener('click', function(e){
+    var row = e.target && e.target.closest('.tool-row');
+    if(!row) return;
+    var idx = parseInt(row.getAttribute('data-index')||'0');
+    var arr = getTools();
+    var target = e.target;
+    if(target.closest('.delete-btn')){
+      arr.splice(idx,1);
+      setTools(arr);
+      renderTools();
+      markDirty();
+      return;
+    }
+    if(target.closest('.info-btn')){
+      var tid = row.getAttribute('data-id')||'';
+      if(tid === 'image-answer') { openImageTool(getToolConfig('image-answer')); }
+      else { openInfo('具体数据'); }
+      return;
+    }
+    if(target.closest('.switch-sm')){
+      arr[idx].enabled = !arr[idx].enabled;
+      setTools(arr);
+      renderTools();
+      markDirty();
+      return;
+    }
+    Array.from(toolList.children).forEach(function(r){ r.classList.remove('selected'); });
+    row.classList.add('selected');
+  });
+  confirmToolModal.addEventListener('click', function(){ closeTool(); });
+  closeAiModal.addEventListener('click', closeAi);
+  cancelAiModal.addEventListener('click', closeAi);
+  function setToolConfig(id, cfg){ try { localStorage.setItem('tool_config_'+id, JSON.stringify(cfg||{})); } catch(e) {} }
+  function getToolConfig(id){ try { return JSON.parse(localStorage.getItem('tool_config_'+id)||'{}'); } catch(e) { return {}; } }
+  function updateImgVars(){
+    imgVars.innerHTML = '';
+    var text = imgPrompt.value || '';
+    var re = /\{\{\s*([a-zA-Z_][\w]*)\s*\}\}/g; var m; var set = new Set();
+    while((m = re.exec(text))){ set.add(m[1]); }
+    Array.from(set).forEach(function(v){ var c = document.createElement('span'); c.className='chip'; c.textContent='{{ '+v+' }}'; imgVars.appendChild(c); });
+  }
+  confirmImageToolModal.addEventListener('click', function(){
+    var cfg = { model: imgModel.value, promptEnabled: imgPromptEnable.checked, prompt: imgPrompt.value };
+    setToolConfig('image-answer', cfg);
+    var arr = getTools();
+    if(!arr.some(function(t){ return t.id === 'image-answer'; })){
+      arr.push({ id:'image-answer', name:'图片回答', enabled:true, icon:'🖼️' });
+      setTools(arr);
+      renderTools();
+      toolCollapsed = false; updateToolCollapsed();
+    }
+    closeImageTool();
+    markDirty();
+  });
+  function setUx(data){ try { localStorage.setItem('ux_config', JSON.stringify(data)); } catch(e) {} }
+  function getUx(){ try { return JSON.parse(localStorage.getItem('ux_config')||'{}'); } catch(e) { return {}; } }
+  function bindCount(input, span){ input.addEventListener('input', function(){ span.textContent = input.value.length + '/20'; }); }
+  bindCount(uxRec1, uxRec1Count); bindCount(uxRec2, uxRec2Count); bindCount(uxRec3, uxRec3Count);
+  confirmUxModal.addEventListener('click', function(){
+    setUx({ welcome: uxWelcome.value||'', visible: uxVisible.classList.contains('on'), rec1: uxRec1.value||'', rec2: uxRec2.value||'', rec3: uxRec3.value||'', nextStep: uxNextStep.classList.contains('on') });
+    closeUx();
+    renderUxList();
+    uxCollapsed = false; updateUxCollapsed();
+    markDirty();
+  });
+
+  function renderUxList(){
+    var d = getUx();
+    uxList.innerHTML = '';
+    function addRow(fieldLabel, fieldKey){
+      var row = document.createElement('div');
+      row.className = 'tool-row';
+      row.setAttribute('data-field', fieldKey);
+      row.innerHTML = '<div class="left">🌟 ' + fieldLabel + '</div>' +
+        '<div class="ops">' +
+        '<button class="icon-btn-sm info-btn" title="信息">ℹ</button>' +
+        '<button class="icon-btn-sm icon-delete delete-btn" title="删除">🗑</button>' +
+        '</div>';
+      uxList.appendChild(row);
+    }
+    if((d.welcome||'').trim().length > 0) addRow('欢迎语', 'welcome');
+    if(!!d.visible) addRow('过程可见性', 'visible');
+    if((d.rec1||'').trim() || (d.rec2||'').trim() || (d.rec3||'').trim()) addRow('推荐问题', 'recommend');
+    if(!!d.nextStep) addRow('下一步推荐问题', 'nextStep');
+    updateUxCollapsed();
+  }
+  renderUxList();
+
+  uxList.addEventListener('click', function(e){
+    var row = e.target && e.target.closest('.tool-row');
+    if(!row) return;
+    var key = row.getAttribute('data-field');
+    var d = getUx();
+    if(e.target.closest('.delete-btn')){
+      if(key === 'welcome') d.welcome = '';
+      else if(key === 'visible') d.visible = false;
+      else if(key === 'recommend') { d.rec1 = ''; d.rec2 = ''; d.rec3 = ''; }
+      else if(key === 'nextStep') d.nextStep = false;
+      setUx(d);
+      renderUxList();
+      markDirty();
+      return;
+    }
+    if(e.target.closest('.info-btn')){
+      var text = '';
+      if(key === 'welcome') text = d.welcome || '';
+      else if(key === 'visible') text = d.visible ? '开启' : '关闭';
+      else if(key === 'recommend') {
+        var arr = [d.rec1||'', d.rec2||'', d.rec3||''].filter(function(x){ return x && x.trim(); });
+        text = arr.length ? arr.join('\n') : '';
+      }
+      else if(key === 'nextStep') text = d.nextStep ? '开启' : '关闭';
+      openInfo(text || '');
+      return;
+    }
+  });
+
+  function syncRange(range, num){ num.value = range.value; }
+  function syncNum(num, range){ range.value = num.value; }
+  function updateFill(range){
+    var min = parseFloat(range.min||0), max = parseFloat(range.max||1), val = parseFloat(range.value||0);
+    var pct = ((val - min) / (max - min)) * 100;
+    range.style.backgroundSize = pct + '% 100%';
+  }
+  [replyLimit, topP, temperature].forEach(function(r){ updateFill(r); });
+  replyLimit.addEventListener('input', function(){ syncRange(replyLimit, replyLimitNum); updateFill(replyLimit); });
+  replyLimitNum.addEventListener('input', function(){ syncNum(replyLimitNum, replyLimit); updateFill(replyLimit); });
+  topP.addEventListener('input', function(){ syncRange(topP, topPNum); updateFill(topP); });
+  topPNum.addEventListener('input', function(){ syncNum(topPNum, topP); updateFill(topP); });
+  temperature.addEventListener('input', function(){ syncRange(temperature, temperatureNum); updateFill(temperature); });
+  temperatureNum.addEventListener('input', function(){ syncNum(temperatureNum, temperature); updateFill(temperature); });
+
+  confirmAiModal.addEventListener('click', function(){
+    try {
+      localStorage.setItem('ai_reply_limit', String(replyLimit.value));
+      localStorage.setItem('ai_top_p', String(topP.value));
+      localStorage.setItem('ai_temperature', String(temperature.value));
+      localStorage.setItem('ai_model', String(aiModelSelect.value));
+    } catch(e) {}
+    modelSelect.value = aiModelSelect.value;
+    closeAi();
+  });
+
+  confirmKbModal.addEventListener('click', function(){
+    function getMenuSelected(menu){ return Array.from(menu.querySelectorAll('input[type=checkbox]')).filter(function(c){ return c.checked; }).map(function(c){ return c.value; }); }
+    var fSel = getMenuSelected(kbFaqMenu);
+    var rSel = getMenuSelected(kbRagMenu);
+    var gSel = getMenuSelected(kbGraphMenu);
+    var total = fSel.length + rSel.length + gSel.length;
+    if(total > 0){
+      var modelOk = !!(kbRerankModel.value && kbRerankModel.value.trim());
+      var topkOk = !!(kbTopK.value && parseInt(kbTopK.value) > 0);
+      if(!modelOk || !topkOk){
+        kbError.textContent = '请选择Rerank模型并设置有效的TOP K';
+        return;
+      }
+    }
+    kbError.textContent = '';
+    try {
+      localStorage.setItem('kb_faq_list', JSON.stringify(fSel));
+      localStorage.setItem('kb_rag_list', JSON.stringify(rSel));
+      localStorage.setItem('kb_graph_list', JSON.stringify(gSel));
+      localStorage.setItem('kb_rerank_model', kbRerankModel.value || '');
+      localStorage.setItem('kb_top_k', kbTopK.value || '5');
+      localStorage.setItem('kb_faq_direct', kbFaqDirect.classList.contains('on') ? 'true' : 'false');
+    } catch(e) {}
+    markDirty();
+    closeKb();
+    renderKbSelected();
+    kbCollapsed = false; updateKbCollapsed();
+  });
+
+  function toggleMenu(box, menu){
+    box.addEventListener('click', function(){
+      var open = menu.style.display === 'block';
+      menu.style.display = open ? 'none' : 'block';
+    });
+    menu.addEventListener('change', function(){
+      var selected = Array.from(menu.querySelectorAll('input[type=checkbox]')).filter(function(c){ return c.checked; }).length;
+      box.textContent = selected ? ('已选 ' + selected + ' 项') : '请选择';
+    });
+  }
+  toggleMenu(kbFaqBox, kbFaqMenu);
+  toggleMenu(kbRagBox, kbRagMenu);
+  toggleMenu(kbGraphBox, kbGraphMenu);
+  kbModal.addEventListener('click', function(e){
+    var t = e.target;
+    [kbFaqMenu,kbRagMenu,kbGraphMenu].forEach(function(m){ if(t !== m && !m.contains(t) && t !== kbFaqBox && t !== kbRagBox && t !== kbGraphBox){ m.style.display = 'none'; } });
+  });
+
+  function renderKbSelected(){
+    var items = [];
+    try {
+      function parseList(key){ try { return JSON.parse(localStorage.getItem(key)||'[]'); } catch(e) { return []; } }
+      var fList = parseList('kb_faq_list');
+      var rList = parseList('kb_rag_list');
+      var gList = parseList('kb_graph_list');
+      fList.forEach(function(n){ items.push({ kind:'FAQ', name:n }); });
+      rList.forEach(function(n){ items.push({ kind:'RAG', name:n }); });
+      gList.forEach(function(n){ items.push({ kind:'图谱', name:n }); });
+    } catch(e) {}
+    kbSelected.innerHTML = '';
+    
+    items.forEach(function(it){
+      var row = document.createElement('div');
+      row.className = 'kb-item';
+      row.setAttribute('data-kind', it.kind);
+      row.setAttribute('data-name', it.name);
+      row.innerHTML = '<div class="left">📚 ' + it.kind + '：' + it.name + '</div>'
+        + '<div class="ops">'
+        + '<button class="icon-btn-sm info-btn" title="信息">ℹ</button>'
+        + '<button class="icon-btn-sm icon-delete delete-btn" title="删除">🗑</button>'
+        + '</div>';
+      kbSelected.appendChild(row);
+    });
+    updateKbCollapsed();
+    updateKbSummary();
+  }
+  renderKbSelected();
+
+  function updateKbSummary(){
+    try {
+      function parseList(key){ try { return JSON.parse(localStorage.getItem(key)||'[]'); } catch(e) { return []; } }
+      var count = parseList('kb_faq_list').length + parseList('kb_rag_list').length + parseList('kb_graph_list').length;
+      kbSummary.textContent = count + ' 个已选';
+    } catch(e) { kbSummary.textContent = '0 个已选'; }
+  }
+
+  function keyByKind(kind){
+    if(kind === 'FAQ') return 'kb_faq';
+    if(kind === 'RAG') return 'kb_rag';
+    return 'kb_graph';
+  }
+
+  kbSelected.addEventListener('click', function(e){
+    var row = e.target && e.target.closest('.kb-item');
+    if(!row) return;
+    var kind = row.getAttribute('data-kind');
+    var name = row.getAttribute('data-name');
+    if(e.target.closest('.delete-btn')){
+      try {
+        function parseList(key){ try { return JSON.parse(localStorage.getItem(key)||'[]'); } catch(e) { return []; } }
+        function setList(key, arr){ try { localStorage.setItem(key, JSON.stringify(arr)); } catch(e) {} }
+        var map = { 'FAQ':'kb_faq_list', 'RAG':'kb_rag_list', '图谱':'kb_graph_list' };
+        var key = map[kind];
+        var arr = parseList(key).filter(function(v){ return v !== name; });
+        setList(key, arr);
+      } catch(err) {}
+      renderKbSelected();
+      markDirty();
+      return;
+    }
+    if(e.target.closest('.info-btn')){
+      openInfo('具体数据');
+      return;
+    }
+    Array.from(kbSelected.children).forEach(function(r){ r.classList.remove('selected'); });
+    row.classList.add('selected');
+  });
+
+  appModal.addEventListener('click', function(e){ if(e.target === appModal) closeApp(); });
+  aiModal.addEventListener('click', function(e){ if(e.target === aiModal) closeAi(); });
+</script>
+</body>
+</html>
