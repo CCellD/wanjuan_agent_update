@@ -88,6 +88,7 @@
   .link-btn { appearance:none; border:none; background:#fff; color:#1f2937; padding:6px 10px; border-radius:8px; border:1px solid var(--border); }
   .muted { color:#6b7280; font-size:12px; }
   .right-actions { display:flex; align-items:center; gap:8px; }
+  .icon-btn-sm.disabled { opacity:.45; pointer-events:none; cursor:default; }
   .kb-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
   .kb-section { background:#f9fafb; border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:14px; }
   .kb-title { font-weight:700; font-size:16px; color:#111827; }
@@ -199,6 +200,7 @@
           <div class="gray-row">
             <span class="gray-title">文件上传</span>
             <div class="right-actions">
+              <button id="uploadSettingsBtn" class="icon-btn-sm" title="设置">⚙</button>
               <div id="uploadSwitch" class="switch"><div class="dot"></div></div>
             </div>
           </div>
@@ -797,6 +799,7 @@
   updateToolCollapsed();
   toolAddBtn.addEventListener('click', openTool);
   var uploadSwitch = document.getElementById('uploadSwitch');
+  var uploadSettingsBtn = document.getElementById('uploadSettingsBtn');
   var uploadModal = document.getElementById('uploadModal');
   var closeUploadModal = document.getElementById('closeUploadModal');
   var cancelUploadModal = document.getElementById('cancelUploadModal');
@@ -817,7 +820,16 @@
       markDirty();
       renderUploadButtons();
     } else {
-      openUpload();
+      var hasPrev = (typeof d.max !== 'undefined') || (d.types && (d.types.doc || d.types.img));
+      if(hasPrev){
+        d.enabled = true;
+        setUpload(d);
+        uploadSwitch.classList.add('on');
+        renderUploadButtons();
+        markDirty();
+      } else {
+        openUpload();
+      }
     }
   });
   uploadModal.addEventListener('click', function(e){ if(e.target === uploadModal) closeUpload(); });
@@ -875,6 +887,7 @@
   var uploadImgBtn = document.getElementById('uploadImgBtn');
   var docInput = document.getElementById('docInput');
   var imgInput = document.getElementById('imgInput');
+  if(uploadSettingsBtn){ uploadSettingsBtn.addEventListener('click', function(){ openUpload(); }); }
   function updateSend(){ if(inputText.value.trim()) sendBtn.classList.remove('disabled'); else sendBtn.classList.add('disabled'); }
   function autoResize(){ inputText.style.height='auto'; var s=inputText.scrollHeight; inputText.style.height=Math.max(36,s)+'px'; }
   function scrollChat(){ chatArea.scrollTop = chatArea.scrollHeight; }
@@ -889,7 +902,7 @@
   toggleLayoutBtn.addEventListener('click', function(){ chatArea.classList.toggle('same'); });
   document.addEventListener('keydown', function(e){ if(e.key!=='Enter') return; if(e.ctrlKey||e.altKey||e.shiftKey||e.metaKey){ e.preventDefault(); if(document.activeElement!==inputText) inputText.focus(); var start=inputText.selectionStart||inputText.value.length; var end=inputText.selectionEnd||start; var v=inputText.value; inputText.value=v.slice(0,start)+'\n'+v.slice(end); inputText.selectionStart=inputText.selectionEnd=start+1; updateSend(); autoResize(); } else { e.preventDefault(); send(); } });
   clearChatBtn.addEventListener('click', function(){ chatArea.innerHTML=''; var p = document.createElement('div'); p.textContent = '在此输入问题以测试对话效果'; chatArea.appendChild(p); inputText.value=''; updateSend(); });
-  function renderUploadButtons(){ var u = getUpload(); var enabled = !!u.enabled; var doc = enabled && !!(u.types && u.types.doc); var img = enabled && !!(u.types && u.types.img); uploadDocBtn.style.display = doc ? 'flex' : 'none'; uploadImgBtn.style.display = img ? 'flex' : 'none'; }
+  function renderUploadButtons(){ var u = getUpload(); var enabled = !!u.enabled; var doc = enabled && !!(u.types && u.types.doc); var img = enabled && !!(u.types && u.types.img); uploadDocBtn.style.display = doc ? 'flex' : 'none'; uploadImgBtn.style.display = img ? 'flex' : 'none'; if(uploadSettingsBtn){ uploadSettingsBtn.style.display = 'flex'; } }
   uploadDocBtn.addEventListener('click', function(){ docInput.click(); });
   uploadImgBtn.addEventListener('click', function(){ imgInput.click(); });
   docInput.addEventListener('change', function(){ var f = docInput.files && docInput.files[0]; if(!f) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage('已选择文件: ' + f.name); docInput.value=''; updateSend(); scrollChat(); });
