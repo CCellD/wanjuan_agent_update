@@ -975,7 +975,17 @@
     var name = card.getAttribute('data-name');
     var id = name.toLowerCase().replace(/\s+/g,'-');
     var arr = getTools();
-    if(arr.some(function(t){ return t.id === id; })) { return; }
+    var exists = arr.some(function(t){ return t.id === id; });
+    if(exists){
+      arr = arr.filter(function(t){ return t.id !== id; });
+      setTools(arr);
+      renderTools();
+      updateToolCollapsed();
+      btn.textContent = '添加';
+      btn.classList.remove('added');
+      markDirty();
+      return;
+    }
     arr.push({ id:id, name:name, enabled:true });
     setTools(arr);
     renderTools();
@@ -1067,7 +1077,9 @@
     }
     if((d.welcome||'').trim().length > 0) addRow('欢迎语', 'welcome');
     if(!!d.visible) addRow('过程可见性', 'visible');
-    if((d.rec1||'').trim() || (d.rec2||'').trim() || (d.rec3||'').trim()) addRow('推荐问题', 'recommend');
+    if((d.rec1||'').trim()) addRow('推荐问题1', 'rec1');
+    if((d.rec2||'').trim()) addRow('推荐问题2', 'rec2');
+    if((d.rec3||'').trim()) addRow('推荐问题3', 'rec3');
     if(!!d.nextStep) addRow('下一步推荐问题', 'nextStep');
     updateUxCollapsed();
   }
@@ -1081,7 +1093,9 @@
     if(e.target.closest('.delete-btn')){
       if(key === 'welcome') d.welcome = '';
       else if(key === 'visible') d.visible = false;
-      else if(key === 'recommend') { d.rec1 = ''; d.rec2 = ''; d.rec3 = ''; }
+      else if(key === 'rec1') d.rec1 = '';
+      else if(key === 'rec2') d.rec2 = '';
+      else if(key === 'rec3') d.rec3 = '';
       else if(key === 'nextStep') d.nextStep = false;
       setUx(d);
       renderUxList();
@@ -1092,10 +1106,9 @@
       var text = '';
       if(key === 'welcome') text = d.welcome || '';
       else if(key === 'visible') text = d.visible ? '开启' : '关闭';
-      else if(key === 'recommend') {
-        var arr = [d.rec1||'', d.rec2||'', d.rec3||''].filter(function(x){ return x && x.trim(); });
-        text = arr.length ? arr.join('\n') : '';
-      }
+      else if(key === 'rec1') text = (d.rec1||'').trim();
+      else if(key === 'rec2') text = (d.rec2||'').trim();
+      else if(key === 'rec3') text = (d.rec3||'').trim();
       else if(key === 'nextStep') text = d.nextStep ? '开启' : '关闭';
       openInfo(text || '');
       return;
