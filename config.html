@@ -26,7 +26,6 @@
   .btn { appearance:none; border:none; padding:8px 16px; border-radius:10px; font-size:14px; font-weight:600; color:#fff; background:var(--primary); cursor:pointer; min-width:92px; }
   .btn.added { background:#e5e7eb; color:#6b7280; cursor:default; }
   #saveAllBtn { background:var(--primary); }
-  #publishBtn { background:#10b981; }
   .preview { background:var(--card); border:1px solid var(--border); border-radius:14px; height:calc(100vh - 105px); display:flex; flex-direction:column; position:relative; }
   .preview-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
   .preview-actions { display:flex; align-items:center; gap:8px; }
@@ -66,6 +65,12 @@
   .float-btn { position:absolute; right:10px; bottom:88px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:999px; background:#fff; box-shadow:0 8px 24px rgba(17,24,39,.15); }
   .overlay { position:fixed; inset:0; background:rgba(17,24,39,.35); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; padding:20px; }
   .dialog { width:720px; max-width:100%; background:#fff; border-radius:18px; border:1px solid var(--border); box-shadow:0 24px 80px rgba(17,24,39,.25); }
+  #aiModal.popover { background:transparent; justify-content:flex-start; align-items:flex-start; }
+  #aiModal .dialog.popover { width:420px; position:absolute; border-radius:16px; box-shadow:0 16px 40px rgba(17,24,39,.18); }
+  #aiModal .dialog.popover .dialog-header, #aiModal .dialog.popover .dialog-footer { display:none; }
+  #aiModal .dialog.popover .dialog-body { padding:12px; }
+  #aiModal .dialog.popover .dialog-body .form-row:nth-child(1),
+  #aiModal .dialog.popover .dialog-body .form-row:nth-child(3) { display:none; }
   .dialog-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--border); font-weight:700; }
   .dialog-body { padding:18px; display:flex; flex-direction:column; gap:16px; }
   .dialog-footer { padding:14px 18px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid var(--border); }
@@ -154,7 +159,6 @@
     <div class="right-actions" style="margin-left:auto">
       <button id="cancelAllBtn" class="secondary-btn">返回</button>
       <button id="saveAllBtn" class="btn">保存</button>
-      <button id="publishBtn" class="btn">发布</button>
     </div>
   </div>
   <div class="grid">
@@ -331,36 +335,42 @@
         <div class="tool-card" data-name="融合信息搜索" data-tab="system">
           <div class="tool-name">融合信息搜索</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
         <div class="tool-card" data-name="数据库操作" data-tab="system">
           <div class="tool-name">数据库操作</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
         <div class="tool-card" data-name="我的Webhook" data-tab="mine">
           <div class="tool-name">我的Webhook</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
         <div class="tool-card" data-name="REST API" data-tab="api">
           <div class="tool-name">REST API</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
         <div class="tool-card" data-name="MCP Server" data-tab="mcp">
           <div class="tool-name">MCP Server</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
         <div class="tool-card" data-name="审批工作流" data-tab="workflow">
           <div class="tool-name">审批工作流</div>
           <div class="tool-actions">
+            <button class="secondary-btn detail-btn">详情</button>
             <button class="btn add-btn">添加</button>
           </div>
         </div>
@@ -539,16 +549,6 @@
           <span></span>
         </div>
         <div class="form-row">
-          <span class="label">回复上限</span>
-          <input id="replyLimit" type="range" min="0" max="4096" value="512">
-          <input id="replyLimitNum" type="number" min="0" max="4096" value="512" class="text">
-        </div>
-        <div class="form-row">
-          <span class="label">Top P</span>
-          <input id="topP" type="range" min="0" max="1" step="0.01" value="0.9">
-          <input id="topPNum" type="number" min="0" max="1" step="0.01" value="0.9" class="text">
-        </div>
-        <div class="form-row">
           <span class="label">温度</span>
           <input id="temperature" type="range" min="0" max="2" step="0.1" value="1.0">
           <input id="temperatureNum" type="number" min="0" max="2" step="0.1" value="1.0" class="text">
@@ -630,10 +630,6 @@
   var cancelAiModal = document.getElementById('cancelAiModal');
   var confirmAiModal = document.getElementById('confirmAiModal');
   var aiModelSelect = document.getElementById('aiModelSelect');
-  var replyLimit = document.getElementById('replyLimit');
-  var replyLimitNum = document.getElementById('replyLimitNum');
-  var topP = document.getElementById('topP');
-  var topPNum = document.getElementById('topPNum');
   var temperature = document.getElementById('temperature');
   var temperatureNum = document.getElementById('temperatureNum');
   var modelSelect = document.getElementById('modelSelect');
@@ -691,7 +687,6 @@
   var uxCollapsed = false;
   var cancelAllBtn = document.getElementById('cancelAllBtn');
   var saveAllBtn = document.getElementById('saveAllBtn');
-  var publishBtn = document.getElementById('publishBtn');
   var isDirty = false;
   function markDirty(){ isDirty = true; }
   var imageToolModal = document.getElementById('imageToolModal');
@@ -703,9 +698,28 @@
   var imgPrompt = document.getElementById('imgPrompt');
   var imgVars = document.getElementById('imgVars');
 
-  function openAi(){ aiModelSelect.value = modelSelect.value; aiModal.style.display = 'flex'; }
+  function openAi(){
+    aiModelSelect.value = modelSelect.value;
+    var dialog = aiModal.querySelector('.dialog');
+    aiModal.classList.add('popover');
+    dialog.classList.add('popover');
+    aiModal.style.display = 'block';
+    var rect = modelSettingsBtn.getBoundingClientRect();
+    var top = rect.bottom + window.scrollY + 12;
+    var w = dialog.offsetWidth || 420;
+    var left = rect.right + window.scrollX - w;
+    dialog.style.top = top + 'px';
+    dialog.style.left = left + 'px';
+  }
   modelSelect.addEventListener('change', markDirty);
-  function closeAi(){ aiModal.style.display = 'none'; }
+  function closeAi(){
+    var dialog = aiModal.querySelector('.dialog');
+    aiModal.style.display = 'none';
+    aiModal.classList.remove('popover');
+    dialog.classList.remove('popover');
+    dialog.style.top = '';
+    dialog.style.left = '';
+  }
 
   function openKb(){
     try {
@@ -893,10 +907,11 @@
   function scrollChat(){ chatArea.scrollTop = chatArea.scrollHeight; }
   inputText.addEventListener('input', function(){ updateSend(); autoResize(); });
   if(promptTextarea){ promptTextarea.addEventListener('input', markDirty); }
-  function createOps(){ var ops = document.createElement('div'); ops.className = 'msg-ops'; var copy = document.createElement('button'); copy.className = 'icon-btn-sm copy-btn'; copy.title = '复制'; copy.textContent = '⎘'; var regen = document.createElement('button'); regen.className = 'icon-btn-sm regen-btn'; regen.title = '重新生成'; regen.textContent = '↻'; var del = document.createElement('button'); del.className = 'icon-btn-sm icon-delete delete-btn'; del.title = '删除'; del.textContent = '🗑'; ops.appendChild(copy); ops.appendChild(regen); ops.appendChild(del); return ops; }
-  function addUserMessage(text){ var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
-  function addAiMessage(text){ var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
-  function addAiRecommend(arr){ var list = (arr||[]).filter(function(x){ return x && x.trim(); }); if(!list.length) return; var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var ops = createOps(); var title = document.createElement('div'); title.className = 'muted'; title.textContent = '猜你想问：'; var box = document.createElement('div'); box.className = 'rec-list'; list.forEach(function(q){ var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rec-item'; btn.textContent = q.trim(); btn.addEventListener('click', function(){ addUserMessage(q.trim()); addAiMessage('这是模拟回复：' + q.trim()); }); box.appendChild(btn); }); bubble.appendChild(title); bubble.appendChild(box); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); }
+  function createOps(opts){ var ops = document.createElement('div'); ops.className = 'msg-ops'; var copy = document.createElement('button'); copy.className = 'icon-btn-sm copy-btn'; copy.title = '复制'; copy.textContent = '⎘'; ops.appendChild(copy); var allow = !opts || opts.allowRegen !== false; if(allow){ var regen = document.createElement('button'); regen.className = 'icon-btn-sm regen-btn'; regen.title = '重新生成'; regen.textContent = '↻'; ops.appendChild(regen); } return ops; }
+  function updateRegenAvailability(){ var all = Array.from(chatArea.querySelectorAll('.regen-btn')); all.forEach(function(b){ b.style.display = 'none'; }); var rows = Array.from(chatArea.querySelectorAll('.msg')); if(!rows.length) return; var last = rows[rows.length-1]; var allowRows = []; if(last.classList.contains('ai')){ var prev = last.previousElementSibling; if(prev && prev.classList.contains('msg') && prev.classList.contains('user')){ allowRows = [prev, last]; } else { allowRows = [last]; } } else if(last.classList.contains('user')) { allowRows = [last]; } allowRows.forEach(function(r){ var btn = r.querySelector('.regen-btn'); if(btn) btn.style.display = 'flex'; }); }
+  function addUserMessage(text){ var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); updateRegenAvailability(); }
+  function addAiMessage(text, opts){ var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text; var ops = createOps(opts); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); updateRegenAvailability(); }
+  function addAiRecommend(arr){ var list = (arr||[]).filter(function(x){ return x && x.trim(); }); if(!list.length) return; var row = document.createElement('div'); row.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var ops = createOps({ allowRegen:false }); var title = document.createElement('div'); title.className = 'muted'; title.textContent = '猜你想问：'; var box = document.createElement('div'); box.className = 'rec-list'; list.forEach(function(q){ var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rec-item'; btn.textContent = q.trim(); btn.addEventListener('click', function(){ addUserMessage(q.trim()); addAiMessage('这是模拟回复：' + q.trim()); }); box.appendChild(btn); }); bubble.appendChild(title); bubble.appendChild(box); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); scrollChat(); updateRegenAvailability(); }
   function send(){ if(isDirty){ openInfo('请先保存再调试'); return; } if(sendBtn.classList.contains('disabled')) return; var t = inputText.value.trim(); if(!t) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage(t); addAiMessage('这是模拟回复：' + t); inputText.value=''; updateSend(); autoResize(); scrollChat(); }
   sendBtn.addEventListener('click', send);
   toggleLayoutBtn.addEventListener('click', function(){ chatArea.classList.toggle('same'); });
@@ -905,8 +920,8 @@
   function renderUploadButtons(){ var u = getUpload(); var enabled = !!u.enabled; var doc = enabled && !!(u.types && u.types.doc); var img = enabled && !!(u.types && u.types.img); uploadDocBtn.style.display = doc ? 'flex' : 'none'; uploadImgBtn.style.display = img ? 'flex' : 'none'; if(uploadSettingsBtn){ uploadSettingsBtn.style.display = 'flex'; } }
   uploadDocBtn.addEventListener('click', function(){ docInput.click(); });
   uploadImgBtn.addEventListener('click', function(){ imgInput.click(); });
-  docInput.addEventListener('change', function(){ var f = docInput.files && docInput.files[0]; if(!f) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage('已选择文件: ' + f.name); docInput.value=''; updateSend(); scrollChat(); });
-  imgInput.addEventListener('change', function(){ var f = imgInput.files && imgInput.files[0]; if(!f) return; var url = URL.createObjectURL(f); if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var img = document.createElement('img'); img.src = url; bubble.appendChild(img); var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); imgInput.value=''; updateSend(); scrollChat(); })
+  docInput.addEventListener('change', function(){ var f = docInput.files && docInput.files[0]; if(!f) return; if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addUserMessage('已选择文件: ' + f.name); docInput.value=''; updateSend(); scrollChat(); updateRegenAvailability(); });
+  imgInput.addEventListener('change', function(){ var f = imgInput.files && imgInput.files[0]; if(!f) return; var url = URL.createObjectURL(f); if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; var row = document.createElement('div'); row.className = 'msg user'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar user'; avatar.textContent = '👤'; var bubble = document.createElement('div'); bubble.className = 'bubble'; var img = document.createElement('img'); img.src = url; bubble.appendChild(img); var ops = createOps(); row.appendChild(avatar); row.appendChild(bubble); row.appendChild(ops); chatArea.appendChild(row); imgInput.value=''; updateSend(); scrollChat(); updateRegenAvailability(); })
   chatArea.addEventListener('click', function(e){
     var copy = e.target && e.target.closest('.copy-btn');
     var regen = e.target && e.target.closest('.regen-btn');
@@ -917,12 +932,11 @@
     var bubble = row.querySelector('.bubble');
     if(copy){ var text = bubble ? bubble.textContent || '' : ''; try { navigator.clipboard.writeText(text); } catch(err) {} return; }
     if(del){ var prev = row.previousElementSibling; var next = row.nextElementSibling; if(row.classList.contains('user') && next && next.classList.contains('msg') && next.classList.contains('ai')){ next.remove(); row.remove(); return; } if(row.classList.contains('ai') && prev && prev.classList.contains('msg') && prev.classList.contains('user')){ prev.remove(); row.remove(); return; } row.remove(); return; }
-    if(regen){ var userRow = row.classList.contains('user') ? row : (row.previousElementSibling && row.previousElementSibling.classList.contains('msg') && row.previousElementSibling.classList.contains('user') ? row.previousElementSibling : null); var aiRow = row.classList.contains('ai') ? row : (row.nextElementSibling && row.nextElementSibling.classList.contains('msg') && row.nextElementSibling.classList.contains('ai') ? row.nextElementSibling : null); var uText = userRow ? (userRow.querySelector('.bubble').textContent || '') : ''; if(aiRow){ aiRow.querySelector('.bubble').textContent = '这是重新生成的回复：' + uText; } else { var newAi = document.createElement('div'); newAi.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var nb = document.createElement('div'); nb.className = 'bubble'; nb.textContent = '这是重新生成的回复：' + uText; var ops2 = createOps(); newAi.appendChild(avatar); newAi.appendChild(nb); newAi.appendChild(ops2); if(row.classList.contains('user')) row.after(newAi); else row.after(newAi); } scrollChat(); return; }
+    if(regen){ var userRow = row.classList.contains('user') ? row : (row.previousElementSibling && row.previousElementSibling.classList.contains('msg') && row.previousElementSibling.classList.contains('user') ? row.previousElementSibling : null); var aiRow = row.classList.contains('ai') ? row : (row.nextElementSibling && row.nextElementSibling.classList.contains('msg') && row.nextElementSibling.classList.contains('ai') ? row.nextElementSibling : null); var uText = userRow ? (userRow.querySelector('.bubble').textContent || '') : ''; if(aiRow){ aiRow.querySelector('.bubble').textContent = '这是重新生成的回复：' + uText; } else { var newAi = document.createElement('div'); newAi.className = 'msg ai'; var avatar = document.createElement('div'); avatar.className = 'chat-avatar'; avatar.textContent = '▧'; var nb = document.createElement('div'); nb.className = 'bubble'; nb.textContent = '这是重新生成的回复：' + uText; var ops2 = createOps(); newAi.appendChild(avatar); newAi.appendChild(nb); newAi.appendChild(ops2); if(row.classList.contains('user')) row.after(newAi); else row.after(newAi); } scrollChat(); updateRegenAvailability(); return; }
   });
   renderUploadButtons();
   cancelAllBtn.addEventListener('click', function(){ window.location.href = 'index.html'; });
-  saveAllBtn.addEventListener('click', function(){ isDirty = false; openInfo('保存成功'); try { var ux = getUx(); var welcome = (ux.welcome||'').trim(); if(welcome){ if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addAiMessage(welcome); } var recs = [ux.rec1||'', ux.rec2||'', ux.rec3||'']; addAiRecommend(recs); } catch(e) {} });
-  publishBtn.addEventListener('click', function(){ if(isDirty){ openInfo('请先保存后再发布'); return; } openInfo('发布成功'); });
+  saveAllBtn.addEventListener('click', function(){ isDirty = false; openInfo('保存成功'); try { var ux = getUx(); var welcome = (ux.welcome||'').trim(); if(welcome){ if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addAiMessage(welcome, { allowRegen:false }); } var recs = [ux.rec1||'', ux.rec2||'', ux.rec3||'']; addAiRecommend(recs); } catch(e) {} });
   toolTabs.forEach(function(tab){
     tab.addEventListener('click', function(){
       toolTabs.forEach(function(t){ t.classList.remove('active'); });
@@ -969,6 +983,8 @@
   renderTools();
 
   toolGrid.addEventListener('click', function(e){
+    var detail = e.target && e.target.closest('.detail-btn');
+    if(detail){ openInfo('具体数据'); return; }
     var btn = e.target && e.target.closest('.add-btn');
     if(!btn) return;
     var card = btn.closest('.tool-card');
@@ -1102,17 +1118,7 @@
       markDirty();
       return;
     }
-    if(e.target.closest('.info-btn')){
-      var text = '';
-      if(key === 'welcome') text = d.welcome || '';
-      else if(key === 'visible') text = d.visible ? '开启' : '关闭';
-      else if(key === 'rec1') text = (d.rec1||'').trim();
-      else if(key === 'rec2') text = (d.rec2||'').trim();
-      else if(key === 'rec3') text = (d.rec3||'').trim();
-      else if(key === 'nextStep') text = d.nextStep ? '开启' : '关闭';
-      openInfo(text || '');
-      return;
-    }
+    if(e.target.closest('.info-btn')){ openUx(); return; }
   });
 
   function syncRange(range, num){ num.value = range.value; }
@@ -1122,18 +1128,12 @@
     var pct = ((val - min) / (max - min)) * 100;
     range.style.backgroundSize = pct + '% 100%';
   }
-  [replyLimit, topP, temperature].forEach(function(r){ updateFill(r); });
-  replyLimit.addEventListener('input', function(){ syncRange(replyLimit, replyLimitNum); updateFill(replyLimit); });
-  replyLimitNum.addEventListener('input', function(){ syncNum(replyLimitNum, replyLimit); updateFill(replyLimit); });
-  topP.addEventListener('input', function(){ syncRange(topP, topPNum); updateFill(topP); });
-  topPNum.addEventListener('input', function(){ syncNum(topPNum, topP); updateFill(topP); });
+  [temperature].forEach(function(r){ updateFill(r); });
   temperature.addEventListener('input', function(){ syncRange(temperature, temperatureNum); updateFill(temperature); });
   temperatureNum.addEventListener('input', function(){ syncNum(temperatureNum, temperature); updateFill(temperature); });
 
   confirmAiModal.addEventListener('click', function(){
     try {
-      localStorage.setItem('ai_reply_limit', String(replyLimit.value));
-      localStorage.setItem('ai_top_p', String(topP.value));
       localStorage.setItem('ai_temperature', String(temperature.value));
       localStorage.setItem('ai_model', String(aiModelSelect.value));
     } catch(e) {}
