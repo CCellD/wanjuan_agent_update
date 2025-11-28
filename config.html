@@ -26,6 +26,9 @@
   .btn { appearance:none; border:none; padding:8px 16px; border-radius:10px; font-size:14px; font-weight:600; color:#fff; background:var(--primary); cursor:pointer; min-width:92px; }
   .btn.added { background:#e5e7eb; color:#6b7280; cursor:default; }
   #saveAllBtn { background:var(--primary); }
+  .status-badge { display:inline-flex; align-items:center; padding:6px 10px; border:1px solid var(--border); border-radius:12px; font-size:12px; background:#fff; color:#6b7280; }
+  .status-badge.clean { color:#059669; border-color:#a7f3d0; background:#ecfdf5; }
+  .status-badge.dirty { color:#b45309; border-color:#fcd34d; background:#fffbeb; }
   .preview { background:var(--card); border:1px solid var(--border); border-radius:14px; height:calc(100vh - 105px); display:flex; flex-direction:column; position:relative; }
   .preview-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
   .preview-actions { display:flex; align-items:center; gap:8px; }
@@ -157,6 +160,7 @@
     <span id="navName" class="name">未命名</span>
     <button id="editAppBtn" class="icon-btn" title="设置">✎</button>
     <div class="right-actions" style="margin-left:auto">
+      <span id="statusBadge" class="status-badge">已保存可调试</span>
       <button id="cancelAllBtn" class="secondary-btn">返回</button>
       <button id="saveAllBtn" class="btn">保存</button>
     </div>
@@ -687,8 +691,10 @@
   var uxCollapsed = false;
   var cancelAllBtn = document.getElementById('cancelAllBtn');
   var saveAllBtn = document.getElementById('saveAllBtn');
+  var statusBadge = document.getElementById('statusBadge');
   var isDirty = false;
-  function markDirty(){ isDirty = true; }
+  function updateStatus(){ if(!statusBadge) return; if(isDirty){ statusBadge.textContent = '已修改需保存'; statusBadge.classList.add('dirty'); statusBadge.classList.remove('clean'); } else { statusBadge.textContent = '已保存可调试'; statusBadge.classList.add('clean'); statusBadge.classList.remove('dirty'); } }
+  function markDirty(){ isDirty = true; updateStatus(); }
   var imageToolModal = document.getElementById('imageToolModal');
   var closeImageToolModal = document.getElementById('closeImageToolModal');
   var cancelImageToolModal = document.getElementById('cancelImageToolModal');
@@ -811,6 +817,7 @@
   }
   updateKbCollapsed();
   updateToolCollapsed();
+  updateStatus();
   toolAddBtn.addEventListener('click', openTool);
   var uploadSwitch = document.getElementById('uploadSwitch');
   var uploadSettingsBtn = document.getElementById('uploadSettingsBtn');
@@ -936,7 +943,7 @@
   });
   renderUploadButtons();
   cancelAllBtn.addEventListener('click', function(){ window.location.href = 'index.html'; });
-  saveAllBtn.addEventListener('click', function(){ isDirty = false; openInfo('保存成功'); try { var ux = getUx(); var welcome = (ux.welcome||'').trim(); if(welcome){ if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addAiMessage(welcome, { allowRegen:false }); } var recs = [ux.rec1||'', ux.rec2||'', ux.rec3||'']; addAiRecommend(recs); } catch(e) {} });
+  saveAllBtn.addEventListener('click', function(){ isDirty = false; updateStatus(); openInfo('保存成功'); try { var ux = getUx(); var welcome = (ux.welcome||'').trim(); if(welcome){ if(chatArea.children.length === 1 && !chatArea.children[0].classList.contains('msg')) chatArea.innerHTML=''; addAiMessage(welcome, { allowRegen:false }); } var recs = [ux.rec1||'', ux.rec2||'', ux.rec3||'']; addAiRecommend(recs); } catch(e) {} });
   toolTabs.forEach(function(tab){
     tab.addEventListener('click', function(){
       toolTabs.forEach(function(t){ t.classList.remove('active'); });
